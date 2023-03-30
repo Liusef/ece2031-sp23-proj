@@ -68,14 +68,16 @@ begin
         end if;
         if (RESETN = '0') then --resets audio data to 0 when low
             parsed_data <= x"0000";
+	    state <= reset;
         elsif (rising_edge(AUD_NEW)) then
             parsed_data <= AUD_DATA;
-            state <= reset;
         end if;
         case state is
             when reset=>
-               min_time <= 0;
-               time_high <= 0;
+               timer_snap <= 0;
+               timer1 <= 0;
+	       snap <= '0';
+	       state <= check;
             when check=>
                 if(parsed_data >= threshold) then
                     state <= fall;
