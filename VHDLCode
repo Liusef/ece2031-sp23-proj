@@ -16,17 +16,28 @@ port(
     IO_WRITE    : in  std_logic;
     SYS_CLK     : in  std_logic;  -- SCOMP's clock
     RESETN      : in  std_logic;
-    AUD_DATA    : in  std_logic_vector(15 downto 0);
-    AUD_NEW     : in  std_logic;
+    AUD_DATA    : in  std_logic_vector(15 downto 0); --audio data from audio monitor
+    AUD_NEW     : in  std_logic; --high when audio data is being written from audio monitor
     IO_DATA     : inout  std_logic_vector(15 downto 0)
 );
 end AudioMonitor;
 
 architecture a of AudioMonitor is
-
+    --output/input variables
     signal out_en      : std_logic; --from CS and IO_DATA
     signal parsed_data : std_logic_vector(15 downto 0); --data from audio monitor 16 bit signed audio data
     signal output_data : std_logic_vector(15 downto 0); --output data, 16 bits available
+    --intermediate variables
+    signal snap        : std_logic; --is high when snap has been detected, is the 0th bit of output data/io data when out
+    signal threshold   : integer; --audio threshold variable
+    
+    signal min_time    : integer; --is the max amount of time a snap can take to go low,is a constant, num clock cycles
+    signal time_high   : integer; --time that snap stays high, is a constant, the number of SCOMP clock cyles
+    signal timer1      : integer; --timer for the fall state, counts the number of SCOMP clock cycles
+    signal timer_snap  : integer; --timer for the snap_high output duration, counts number of SCOMP clock cycles (0.1 microseconds per cycle)
+    
+    
+    
     
     type state_type is (reset, check, fall); --state machine states
     signal state    : state_type; -- state signal
@@ -58,6 +69,12 @@ begin
         case state is
             when reset=>
                
+            when check=>
+            
     end process;
-
+    
+    --updating all variables concurrently
+    threshold <= 10000;
+    min_time <= 
+    time_high
 end a;
