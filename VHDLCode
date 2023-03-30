@@ -75,11 +75,25 @@ begin
             when reset=>
                min_time = 0;
                time_high = 0;
-               
             when check=>
-            
+                if(parsed_data >= threshold) then
+                    state => fall;
+                else
+                    timer1 = 0;
+                    state => check; 
+                end if;
             when fall=>
-            
+                if(min_time < timer1) then
+                    if(parsed_data >= threshold) then
+                        state => check;
+                    else
+                        snap = 1;
+                        timer_snap = 0;
+                        state => check;
+                    end if;
+                else
+                    state => fall;
+                end if;
          end case;
     end process;
     
