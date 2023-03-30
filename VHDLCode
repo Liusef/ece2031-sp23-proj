@@ -61,20 +61,30 @@ begin
     -- value is ready.
     process (RESETN, SYS_CLK) --activated whevener resetn or sys_clk change
     begin
+        if (rising_edge(SYS_CLK)) then --if rising clock edge then the timer variables increment
+            timer1 = timer1+1;
+            timer_snap = timer_snap+1;
+        end if;
         if (RESETN = '0') then --resets audio data to 0 when low
             parsed_data <= x"0000";
         elsif (rising_edge(AUD_NEW)) then
             parsed_data <= AUD_DATA;
+            state = reset;
         end if;
         case state is
             when reset=>
+               min_time = 0;
+               time_high = 0;
                
             when check=>
             
+            when fall=>
+            
+         end case;
     end process;
     
     --updating all variables concurrently
     threshold <= 10000;
-    min_time <= 
-    time_high
+    min_time <= 2500000; --equivalent to a 0.25s time before audio signal is checked to be below threshold
+    time_high <= 5000000; --equivalent to a 0.5s time for snap output to be high
 end a;
