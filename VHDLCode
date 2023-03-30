@@ -28,7 +28,8 @@ architecture a of AudioMonitor is
     signal parsed_data : std_logic_vector(15 downto 0); --data from audio monitor 16 bit signed audio data
     signal output_data : std_logic_vector(15 downto 0); --output data, 16 bits available
     
-    type state_type is 
+    type state_type is (reset, check, fall); --state machine states
+    signal state    : state_type; -- state signal
 
 begin
 
@@ -54,7 +55,9 @@ begin
         elsif (rising_edge(AUD_NEW)) then
             parsed_data <= AUD_DATA;
         end if;
-        
+        case state is
+            when reset=>
+               
     end process;
 
 end a;
