@@ -1,1 +1,11 @@
+-- SCOMPMonitor.vhd
+-- 3/30/23
+-- This SCOMP peripheral monitors audio to detect snaps and loud noises
 
+library IEEE;
+library lpm;
+
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+use IEEE.std_logic_signed.all;
+use lpm.lpm_components.all;
