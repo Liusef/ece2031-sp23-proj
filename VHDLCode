@@ -48,6 +48,7 @@ begin
     process (CS) begin
         if rising_edge(CS) then
             output_data <= parsed_data; --this will be changed
+            output_data(0) = snap; -- makes the 0th bit the snap signal
         end if;
     end process;
     -- Drive IO_DATA when needed.
@@ -101,4 +102,7 @@ begin
     threshold <= 10000;
     min_time <= 2500000; --equivalent to a 0.25s time before audio signal is checked to be below threshold
     time_high <= 5000000; --equivalent to a 0.5s time for snap output to be high
+    if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
+        snap = 0;
+     end if;
 end a;
