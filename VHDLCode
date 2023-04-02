@@ -62,34 +62,36 @@ begin
     -- value is ready.
     process (RESETN, SYS_CLK) --activated whevener resetn or sys_clk change
     begin
-        if (rising_edge(SYS_CLK)) then --if rising clock edge then the timer variables increment
-            timer1 <= timer1+1;
-            timer_snap <= timer_snap+1;
-        end if;
         if (RESETN = '0') then --resets audio data to 0 when low
             parsed_data <= x"0000";
 	    state <= reset;
-        elsif (rising_edge(AUD_NEW)) then
-            parsed_data <= AUD_DATA;
-        end if;
-        case state is
-            when reset=>
+        else 
+	    if (rising_edge(AUD_NEW)) then --updates audio data
+            	parsed_data <= AUD_DATA;
+	    end if;
+	    if (rising_edge(SYS_CLK)) then --if rising clock edge then the timer variables increment
+            	timer1 <= timer1+1;
+            	timer_snap <= timer_snap+1;
+	    end if;
+	    
+	    case state is --case statement for the states
+            when reset=> --reset state, initializes variables
                timer_snap <= 0;
                timer1 <= 0;
 	       snap <= '0';
 	       state <= check;
-            when check=>
+            when check=> --checks to see if the audio has gone above the threshold
                 if(parsed_data >= threshold) then
                     state <= fall;
                 else
                     timer1 <= 0;
                     state <= check; 
                 end if;
-            when fall=>
+            when fall=> --waits and then checks to see if the audio has gone back below the threshold
                 if(min_time < timer1) then
                     if(parsed_data >= threshold) then
                         state <= check;
-                    else
+                    else --if the audio has gone down then a 1 is output
                         snap <= '1';
                         timer_snap <= 0;
                         state <= check;
@@ -98,9 +100,12 @@ begin
                     state <= fall;
                 end if;
          end case;
-			if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
-				snap <= '0';
-			end if;
+	 if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
+	 	snap <= '0';
+	 end if;
+        end if;
+        
+			
     end process;
     
     --updating all variables concurrently
