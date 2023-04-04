@@ -29,12 +29,12 @@ architecture a of AudioMonitor is
     signal output_data : std_logic_vector(15 downto 0); --output data, 16 bits available
     --intermediate variables
     signal snap        : std_logic; --is high when snap has been detected, is the 0th bit of output data/io data when out
-    signal threshold   : integer; --audio threshold variable
+    signal threshold   : std_logic_vector (15 downto 0); --audio threshold variable
     
-    signal min_time    : integer; --is the max amount of time a snap can take to go low,is a constant, num clock cycles
-    signal time_high   : integer; --time that snap stays high, is a constant, the number of SCOMP clock cyles
-    signal timer1      : integer; --timer for the fall state, counts the number of SCOMP clock cycles
-    signal timer_snap  : integer; --timer for the snap_high output duration, counts number of SCOMP clock cycles (0.1 microseconds per cycle)
+    signal min_time    : std_logic_vector (25 downto 0); --is the max amount of time a snap can take to go low,is a constant, num clock cycles
+    signal time_high   : std_logic_vector (25 downto 0); --time that snap stays high, is a constant, the number of SCOMP clock cyles
+    signal timer1      : std_logic_vector (25 downto 0); --timer for the fall state, counts the number of SCOMP clock cycles
+    signal timer_snap  : std_logic_vector (25 downto 0); --timer for the snap_high output duration, counts number of SCOMP clock cycles (0.1 microseconds per cycle)
     
     
     
@@ -65,26 +65,26 @@ begin
         if (RESETN = '0') then --resets audio data to 0 when low
             parsed_data <= x"0000";
 	    state <= reset;
-        else 
-	    if (rising_edge(AUD_NEW)) then --updates audio data
-            	parsed_data <= AUD_DATA;
-	    end if;
-	    if (rising_edge(SYS_CLK)) then --if rising clock edge then the timer variables increment
-            	timer1 <= timer1+1;
-            	timer_snap <= timer_snap+1;
-	    end if;
+       else 
+			if (rising_edge(AUD_NEW)) then --updates audio data
+						parsed_data <= AUD_DATA;
+			end if;
+			if (rising_edge(SYS_CLK)) then --if rising clock edge then the timer variables increment
+            	timer1 <= timer1+"1";
+            	timer_snap <= timer_snap+"1";
+			end if;
 	    
-	    case state is --case statement for the states
+			case state is --case statement for the states
             when reset=> --reset state, initializes variables
-               timer_snap <= 0;
-               timer1 <= 0;
-	       snap <= '0';
-	       state <= check;
+               timer_snap <= x"0";
+               timer1 <= x"0";
+					snap <= '0';
+					state <= check;
             when check=> --checks to see if the audio has gone above the threshold
                 if(parsed_data >= threshold) then
                     state <= fall;
                 else
-                    timer1 <= 0;
+                    timer1 <= x"0";
                     state <= check; 
                 end if;
             when fall=> --waits and then checks to see if the audio has gone back below the threshold
@@ -93,24 +93,24 @@ begin
                         state <= check;
                     else --if the audio has gone down then a 1 is output
                         snap <= '1';
-                        timer_snap <= 0;
+                        timer_snap <= x"0";
                         state <= check;
                     end if;
                 else
                     state <= fall;
                 end if;
-         end case;
-	 if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
-	 	snap <= '0';
-	 end if;
+				end case;
+				if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
+					snap <= '0';
+				end if;
         end if;
         
 			
     end process;
     
     --updating all variables concurrently
-    threshold <= 10000;
-    min_time <= 2500000; --equivalent to a 0.25s time before audio signal is checked to be below threshold
-    time_high <= 5000000; --equivalent to a 0.5s time for snap output to be high
+    threshold <= x"2710";
+    min_time <= x"2625A0"; --equivalent to a 0.25s time before audio signal is checked to be below threshold
+    time_high <= x"4C4B40"; --equivalent to a 0.5s time for snap output to be high
     
 end a;
