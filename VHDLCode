@@ -57,49 +57,47 @@ begin
         output_data        when '1',
         "ZZZZZZZZZZZZZZZZ" when others;
 
-    -- This template device just copies the input data
-    -- to IO_DATA by latching the data every time a new
-    -- value is ready.
+   --process statement to do audio processing
     process (RESETN, AUD_NEW) --activated whevener resetn or AUD_NEW change
     begin
         if (RESETN = '0') then --resets audio data to 0 when low
             parsed_data <= x"0000";
 				state <= reset;
-       elsif (rising_edge(AUD_NEW)) then
-				parsed_data <= AUD_DATA; --updates audio data
-				--updates counter variables
-            timer1 <= timer1+"1";
-            timer_snap <= timer_snap+"1";
+        elsif (rising_edge(AUD_NEW)) then
+		parsed_data <= AUD_DATA; --updates audio data
+		--updates counter variables
+            	timer1 <= timer1+"1";
+            	timer_snap <= timer_snap+"1";
 				
-			case state is --case statement for the states
-            when reset=> --reset state, initializes variables
-               timer_snap <= x"000000";
-               timer1 <= x"000000";
-					snap <= '0';
-					state <= check;
-            when check=> --checks to see if the audio has gone above the threshold
-                if(parsed_data >= threshold) then
-                    state <= fall;
-                else
-                    timer1 <= x"000000";
-                    state <= check; 
-                end if;
-            when fall=> --waits and then checks to see if the audio has gone back below the threshold
-                if(min_time < timer1) then
-                    if(parsed_data >= threshold) then
-                        state <= check;
-                    else --if the audio has gone down then a 1 is output
-                        snap <= '1';
-                        timer_snap <= x"000000";
-                        state <= check;
-                    end if;
-                else
-                    state <= fall;
-                end if;
-				end case;
-				if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
-					snap <= '0';
-				end if;
+		case state is --case statement for the states
+            		when reset=> --reset state, initializes variables
+               			timer_snap <= x"000000";
+               			timer1 <= x"000000";
+				snap <= '0';
+				state <= check;
+            		when check=> --checks to see if the audio has gone above the threshold
+                		if(parsed_data >= threshold) then
+                    			state <= fall;
+                		else
+                    			timer1 <= x"000000";
+                    			state <= check; 
+                		end if;
+            		when fall=> --waits and then checks to see if the audio has gone back below the threshold
+               	 		if(min_time < timer1) then
+                    			if(parsed_data >= threshold) then
+                        			state <= check;
+                    			else --if the audio has gone down then a 1 is output
+                        			snap <= '1';
+                        			timer_snap <= x"000000";
+                        			state <= check;
+                    			end if;
+                		else
+                    			state <= fall;
+                		end if;
+		end case;
+		if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
+			snap <= '0';
+		end if;
         end if;
         
 			
