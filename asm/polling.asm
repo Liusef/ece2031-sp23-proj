@@ -5,18 +5,19 @@
 ; ECE 2031 L08
 
 Start:
-    IN      Peripheral
-    JZERO   Richard
+    IN      Peripheral      ;takes in data from peripheral
+    JZERO   Richard         ;if peripheral has not returned a positive value of 1 (snap detected), jump
 
-LEDon:
-    LOAD    Full
-    OUT     LEDs
-    JUMP    Start
+--turns on the LED lights--
+    LOAD    Full            ;loads full value into AC
+    OUT     LEDs            ;outputs the LED lights (should be on)
+    JUMP    Start           ;jumps back to beginning
 
+--keeps the LED lights off--
 Richard:
-    LOAD    Zero
-    OUT     LEDs
-    JUMP    Start
+    LOAD    Zero            ;loads zero into AC
+    OUT     LEDs            ;outputs the LED lights (should be off)
+    JUMP    Start           ;jumps back to beginning
 
 
 
