@@ -17,7 +17,8 @@ typedef unsigned short uval; // Unsigned value
 
 // Dummy functions
 void OUT(uval device, val message); // Equivalent to the out command
-val IN(uval device); // Equivalent to the in command
+val  IN(uval device); // Equivalent to the in command
+void HALT(); // self explanatory
 
 
 // definitions, same as the bottom of our .asm file
@@ -36,11 +37,11 @@ val IN(uval device); // Equivalent to the in command
 
 // Device inputs
 #define P_resetctr  (0x5f)  // Any input to this will reset the counter
-#define P_multimode (0x5e)  // Switch to multi-clap mode
+#define P_multimode (0x5e)  // Switch to multi-clap mode, can we just not do this one lmao
 
 // Constants
 const uval zero = 0;
-const uval full = 0xFFFF;
+const uval full = 0x3FF;       // LSB 10 bits
 const uval reset_mask = 0x200; // Masks with the 9th switch to check to reset timer
 const uval multi_mask = 0x100; // Masks with the 8th switch to switch to multiclap mode
 const uval singl_mode = 0x0;   // These values are arbitrary
@@ -55,6 +56,11 @@ const uval med_led = 0b111111; // 6 leds
 const val mode_hi  = 4;
 const uval hi_led  = 0xFFFF; // all LEDs
 
+const uval fourth_sw = 0x10; // 5th switch (switch no. 4)
+const uval ls_nibble = 0xF; // least significant nibble (hex digit)
+
+const val fail = 0xFA; // Display this on hex1 for failure
+
 
 // Variables, if no initial value is given then just assign to whatever
 val swap;
@@ -64,44 +70,40 @@ val med_out;
 val hi_out;
 val modesw; // mode switch
 
-
+uval adv_store;
 
 val AC; // Simulate the accumulator
 
 
 int main() {
-    AC = zero; // This is the same as [LOAD zero]
     
-    // This defines our event loop
+    AC = IN(SWITCHES);
+    AC = AC & 0x10;
+
+    if (AC != 0) {
+        AC = zero;
+        basic();
+    } else {
+        AC = zero;
+        adv();
+    }
+
+    return 0; // Just C convention dwai :)
+}
+
+
+void basic() {
     while (1) {
-        
         // read user input
         sw_in = IN(SWITCHES);       // IN then STORE
 
-        // Check if we need to reset the timer
+        // Check if we need to reset the counter
         AC = sw_in;                 // LOAD
         AC = AC & reset_mask;       // AND
         if ((AC) > 0) {
             OUT(P_resetctr, AC);    // Shouldn't matter what the user sends
         }
-
-        // Tell it what mode we're using
-        AC = sw_in;
-        AC = AC & multi_mask;
-        if (AC != 0) {
-            AC = multi_mode;
-        } else {
-            AC = singl_mode;
-        }
     
-        AC = AC - modesw;
-        if (AC != 0) { // If AC isn't 0, that means there was a mode change
-            if (AC == -1) AC = multi_mode; // AC will be -1 if switching from multi to single mode
-            if (AC ==  1) AC = singl_mode; // AC will be  1 if switching from single to multi mode // TODO consider changing to else
-            OUT(P_multimode, AC);
-            modesw = AC; // STORE
-        }
-
         // read basic outputs
         low_out = IN(P_basic_low);  // IN then STORE
         med_out = IN(P_basic_med);
@@ -111,16 +113,11 @@ int main() {
         AC = IN(P_counter);         // IN
         OUT(HEX0, AC);              // OUT
 
-        if (modesw != 0) {
-            multimode();            // CALL
-        } else {
-            show_LEDs();            // CALL
-        }
+        show_LEDs();
 
-    } // JUMP to beginning of loop
-
-    return 0; // Just C convention dwai :)
+    }
 }
+
 
 void show_LEDs() {
     swap = AC;              // STORE
@@ -180,8 +177,44 @@ show_leds_out:
     return;                 // RET
 }
 
-void multimode() {
-    // lmao i don't know what we're supposed to do with this
-    return;                 // RET
+void wait_sec() {
+    swap = AC;
+    OUT(TIMER, AC);
+    AC = IN(TIMER);
+    while (AC - 10 != 0) ; // do nothing lmao
+    AC = swap;  // LOAD
+    return;     // RET
+}
+
+void adv() {
+
+    AC = IN(TIMER);     
+    AC = AC & ls_nibble;    // AND
+    OUT(HEX0, AC);
+    adv_store = AC;              // STORE
+
+    OUT(P_resetctr, AC);    // resetting both
+    AC = full;
+    OUT(LEDS, AC);
+
+    while (AC != 0) {
+        wait_sec();
+        AC = AC >> 1;           // SHIFT -1 (negative is right, pos is left 💃) 😔😔😔😔😔😔😔😔😔😔
+        OUT(LEDS, AC);
+    }
+
+    AC = IN(P_counter);
+    AC = AC - adv_store;
+
+    if (AC != 0) {
+        AC = fail;
+        OUT(HEX1, AC);
+    } else {
+        AC = adv_store;
+        OUT(HEX1, AC);
+    }
+
+    HALT();
+    
 }
 
