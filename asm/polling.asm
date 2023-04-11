@@ -8,12 +8,12 @@ Start:
     IN      Peripheral      ;takes in data from peripheral
     JZERO   Richard         ;if peripheral has not returned a positive value of 1 (snap detected), jump
 
---turns on the LED lights--
+;--turns on the LED lights--
     LOAD    Full            ;loads full value into AC
     OUT     LEDs            ;outputs the LED lights (should be on)
     JUMP    Start           ;jumps back to beginning
 
---keeps the LED lights off--
+;--keeps the LED lights off--
 Richard:
     LOAD    Zero            ;loads zero into AC
     OUT     LEDs            ;outputs the LED lights (should be off)
