@@ -66,8 +66,8 @@ begin
         elsif (rising_edge(AUD_NEW)) then
 		parsed_data <= AUD_DATA; --updates audio data
 		--updates counter variables
-            	timer1 <= timer1+"1";
-            	timer_snap <= timer_snap+"1";
+            	timer1 <= timer1 + x"000001";
+            	timer_snap <= timer_snap + x"000001";
 				
 		case state is --case statement for the states
             		when reset=> --reset state, initializes variables
