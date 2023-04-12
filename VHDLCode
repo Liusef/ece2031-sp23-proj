@@ -86,13 +86,13 @@ begin
                     		if(parsed_data >= threshold) then
                         		state <= fall;
                     		else --if the audio has gone down then a 1 is output
-									if(timer1 < min_time) then
-                        		snap <= '1';
-                        		timer_snap <= x"000000";
-                        		state <= check;
-									else
-										state <= fall;
-									end if;
+					if(timer1 < min_time) then
+                        			snap <= '1';
+                        			timer_snap <= x"000000";
+                        			state <= check; -- reroute to reset state? lights stayed on all the time when this was added
+					else
+						state <= fall;
+					end if;
                     	end if;
 
 			end case;
