@@ -13,13 +13,15 @@ use lpm.lpm_components.all;
 
 entity AudioMonitor is
 port(
-    CS          : in  std_logic;
+    SNAP_OUT          : in  std_logic; --1 when snap data is requested
     IO_WRITE    : in  std_logic;
     SYS_CLK     : in  std_logic;  -- SCOMP's clock
     RESETN      : in  std_logic;
     AUD_DATA    : in  std_logic_vector(15 downto 0); --audio data from audio monitor
     AUD_NEW     : in  std_logic; --high when audio data is being written from audio monitor
-    IO_DATA     : inout  std_logic_vector(15 downto 0)
+    IO_DATA     : inout  std_logic_vector(15 downto 0);
+	 COUNTER_RESET		 : in  std_logic; --reset the counter when high
+	 MULTI_MODE			 : in  std_logic --1 when in multi snap mode
 );
 end AudioMonitor;
 
@@ -44,22 +46,39 @@ architecture a of AudioMonitor is
     signal state    : state_type; -- state signal
 
 begin
-
+	-- snap_out, counter_reset, multi_mode
     -- Latch data on rising edge of CS to keep it stable during IN
-    process (CS) begin
-        if rising_edge(CS) then
+    process (SNAP_OUT) begin
+        if rising_edge(SNAP_OUT) then
             output_data <= x"0000"; --this will be changed
             output_data(0) <= snap; -- makes the 0th bit the snap signal
-	end if;
+		  end if;
+	
     end process;
+	 
     -- Drive IO_DATA when needed.
-    out_en <= CS AND ( NOT IO_WRITE );
+    out_en <= SNAP_OUT AND ( NOT IO_WRITE );
     with out_en select IO_DATA <=
         output_data        when '1',
         "ZZZZZZZZZZZZZZZZ" when others;
-    in_en <= CS AND IO_WRITE;
-    with in_en select IO_DATA
+	 io_en <= SNAP_OUT OR COUNTER_RESET OR MULTI_MODE;
+	 process (io_en) begin
+			if (rising_edge(io_en)) then
+			
+				if (SNAP_OUT = '1') then
+			
+				elsif (COUNTER_RESET = '1') then
+			
+				elsif (MULTI_MODE = '1') then
+			
+				end if;
+			else 
+				IO_DATA <= "ZZZZZZZZZZZZZZZZ";
+			end if;
+	 end process;
 
+	 
+	 
    --process statement to do audio processing
     process (RESETN, AUD_NEW) --activated whevener resetn or AUD_NEW change
     begin
