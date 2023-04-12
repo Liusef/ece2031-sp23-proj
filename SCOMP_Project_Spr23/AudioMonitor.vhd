@@ -127,6 +127,7 @@ end process;
 						if(timer1 < min_time) then
                         				snap <= '1';
                         				timer_snap <= x"000000";
+							counter <= counter + x"0001";
                         				state <= check; -- reroute to reset state? lights stayed on all the time when this was added
 						else
 							state <= check;
