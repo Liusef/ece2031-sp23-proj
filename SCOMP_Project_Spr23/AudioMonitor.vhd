@@ -96,6 +96,7 @@ end process;
                			timer_snap <= x"000000";
                			timer1 <= x"000000";
 				snap <= '0';
+				counter <= x"0000";
 				state <= check;
             		when check=> --checks to see if the audio has gone above the threshold
                 		if(parsed_data >= threshold) then
@@ -113,16 +114,25 @@ end process;
                     				else --if the audio has gone down then a 1 is output
                         				snap <= '1';
                         				timer_snap <= x"000000";
+							counter <= counter + x"0001";
                         				state <= check;
                     				end if;
                 			else
                     				state <= fall;
                 			end if;
 				else
-					
+					if(parsed_data >= threshold) then
+                        			state <= fall;
+                    			else --if the audio has gone down then a 1 is output
+						if(timer1 < min_time) then
+                        				snap <= '1';
+                        				timer_snap <= x"000000";
+                        				state <= check; -- reroute to reset state? lights stayed on all the time when this was added
+						else
+							state <= check;
+						end if;
+                    			end if;
 				end if;
-						
-               	 		
 						--very basic basic functionality - should not have to use
 						--snap <= '1';
 						--timer_snap <= x"000000";
