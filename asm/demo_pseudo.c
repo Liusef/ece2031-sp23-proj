@@ -31,7 +31,7 @@ void HALT(); // self explanatory
 
 // Device outputs
 #define P_basic_low (0x50)
-#define P_basic_med (0x53)
+#define P_basic_med (0x51)
 #define P_basic_hi  (0x52)
 #define P_counter   (0x53)
 
@@ -88,6 +88,8 @@ int main() {
         adv();
     }
 
+    HALT(); // we should never reach this, the above programs either loop forever or halt on their own
+
     return 0; // Just C convention dwai :)
 }
 
@@ -97,27 +99,66 @@ void basic() {
         // read user input
         sw_in = IN(SWITCHES);       // IN then STORE
 
-        // Check if we need to reset the counter
         AC = sw_in;                 // LOAD
-        AC = AC & reset_mask;       // AND
-        if ((AC) > 0) {
-            OUT(P_resetctr, AC);    // Shouldn't matter what the user sends
+        AC = AC & multi_mask;       // AND
+
+        if (AC != 0) {
+            AC = multi_mode;
+            OUT(P_multimode, AC);
+            multi_demo();
+        } else {
+            AC = singl_mode;
+            OUT(P_multimode, AC);
+            single_demo();
         }
-    
-        // read basic outputs
-        low_out = IN(P_basic_low);  // IN then STORE
-        med_out = IN(P_basic_med);
-        hi_out  = IN(P_basic_hi);
-
-        // read counter
-        AC = IN(P_counter);         // IN
-        OUT(HEX0, AC);              // OUT
-
-        show_LEDs();
-
     }
 }
 
+void multi_demo() {
+    AC = sw_in;                 // LOAD
+    AC = AC & reset_mask;       // AND
+    if (AC != 0) {
+        OUT(P_resetctr, AC);
+    }
+
+    // The multi-clap mode does not support thresholds, only read low  
+    // We can theoretically make it support thresholds, then we can just call show_leds()  
+    AC = IN(P_basic_low);  // IN
+
+    if (AC != 0) {
+        AC = full;
+        OUT(LEDS, AC);
+    } else {
+        AC = zero;
+        OUT(LEDS, AC);
+    }
+
+    AC = IN(P_counter);
+    OUT(HEX0, AC);
+
+    return;
+}
+
+void single_demo() {
+    // Check if we need to reset the counter
+    AC = sw_in;                 // LOAD
+    AC = AC & reset_mask;       // AND
+    if ((AC) > 0) {
+        OUT(P_resetctr, AC);    // Shouldn't matter what the user sends
+    }
+
+    // read basic outputs
+    low_out = IN(P_basic_low);  // IN then STORE
+    med_out = IN(P_basic_med);
+    hi_out  = IN(P_basic_hi);
+
+    // read counter
+    AC = IN(P_counter);         // IN
+    OUT(HEX0, AC);              // OUT
+
+    show_LEDs();                // CALL
+    return;                     // RET
+}
 
 void show_LEDs() {
     swap = AC;              // STORE
