@@ -36,9 +36,6 @@ architecture a of AudioMonitor is
     signal timer1      : std_logic_vector (23 downto 0); --timer for the fall state, counts the number of SCOMP clock cycles
     signal timer_snap  : std_logic_vector (23 downto 0); --timer for the snap_high output duration, counts number of SCOMP clock cycles (0.1 microseconds per cycle)
     
-    
-    
-    
     type state_type is (reset, check, fall); --state machine states
     signal state    : state_type; -- state signal
 
@@ -62,7 +59,7 @@ begin
     begin
         if (RESETN = '0') then --resets audio data to 0 when low
             parsed_data <= x"0000";
-				state <= reset;
+		state <= reset;
         elsif (rising_edge(AUD_NEW)) then
 		parsed_data <= AUD_DATA; --updates audio data
 		--updates counter variables
