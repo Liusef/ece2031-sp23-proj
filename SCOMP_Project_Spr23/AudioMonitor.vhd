@@ -50,13 +50,15 @@ begin
         if rising_edge(CS) then
             output_data <= x"0000"; --this will be changed
             output_data(0) <= snap; -- makes the 0th bit the snap signal
-        end if;
+	end if;
     end process;
     -- Drive IO_DATA when needed.
     out_en <= CS AND ( NOT IO_WRITE );
     with out_en select IO_DATA <=
         output_data        when '1',
         "ZZZZZZZZZZZZZZZZ" when others;
+    in_en <= CS AND IO_WRITE;
+    with in_en select IO_DATA
 
    --process statement to do audio processing
     process (RESETN, AUD_NEW) --activated whevener resetn or AUD_NEW change
