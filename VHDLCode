@@ -73,28 +73,29 @@ begin
             		when reset=> --reset state, initializes variables
                			timer_snap <= x"000000";
                			timer1 <= x"000000";
-				snap <= '0';
-				state <= check;
+									snap <= '0';
+									state <= check;
             		when check=> --checks to see if the audio has gone above the threshold
                 		if(parsed_data >= threshold) then
                     			state <= fall;
                 		else
                     			timer1 <= x"000000";
-                    			state <= check; 
+                    			state <= check;
                 		end if;
             		when fall=> --waits and then checks to see if the audio has gone back below the threshold
-               	 		if(min_time < timer1) then
-                    			if(parsed_data >= threshold) then
-                        			state <= check;
-                    			else --if the audio has gone down then a 1 is output
-                        			snap <= '1';
-                        			timer_snap <= x"000000";
-                        			state <= check;
-                    			end if;
-                		else
-                    			state <= fall;
-                		end if;
-		end case;
+                    		if(parsed_data >= threshold) then
+                        		state <= fall;
+                    		else --if the audio has gone down then a 1 is output
+									if(timer1 < min_time) then
+                        		snap <= '1';
+                        		timer_snap <= x"000000";
+                        		state <= check;
+									else
+										state <= fall;
+									end if;
+                    	end if;
+
+			end case;
 		if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
 			snap <= '0';
 		end if;
