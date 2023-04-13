@@ -29,4 +29,4 @@ LEDs:      EQU 001
 Timer:     EQU 002
 Hex0:      EQU 004
 Hex1:      EQU 005
-Peripheral:EQU &H50
+Peripheral: EQU &H050
