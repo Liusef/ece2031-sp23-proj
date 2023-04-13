@@ -17,7 +17,10 @@ ENTITY IO_DECODER IS
     TIMER_EN      : OUT STD_LOGIC;
     HEX0_EN       : OUT STD_LOGIC;
     HEX1_EN       : OUT STD_LOGIC;
-	 AUDIO_EN		: OUT STD_LOGIC
+    SNAP_OUT	  : OUT STD_LOGIC;
+    COUNTER_RESET : OUT STD_LOGIC;
+    MULTI_MODE 	  : OUT STD_LOGIC;
+    COUNTER_OUT   : OUT STD_LOGIC
   );
 
 END ENTITY;
@@ -35,6 +38,9 @@ begin
   TIMER_EN     <= '1' WHEN (ADDR_INT = 16#002#) and (IO_CYCLE = '1') ELSE '0';
   HEX0_EN      <= '1' WHEN (ADDR_INT = 16#004#) and (IO_CYCLE = '1') ELSE '0';
   HEX1_EN      <= '1' WHEN (ADDR_INT = 16#005#) and (IO_CYCLE = '1') ELSE '0';
-  AUDIO_EN		<= '1' WHEN (ADDR_INT = 16#050#) and (IO_CYCLE = '1') ELSE '0';
-      
+  SNAP_OUT    <= '1' WHEN (ADDR_INT = 16#050#) and (IO_CYCLE = '1') ELSE '0';
+  COUNTER_OUT    <= '1' WHEN (ADDR_INT = 16#051#) and (IO_CYCLE = '1') ELSE '0';
+  COUNTER_RESET    <= '1' WHEN (ADDR_INT = 16#05E#) and (IO_CYCLE = '1') ELSE '0';    
+  MULTI_MODE    <= '1' WHEN (ADDR_INT = 16#05F#) and (IO_CYCLE = '1') ELSE '0';
+  			   
 END a;
