@@ -22,6 +22,7 @@ port(
     IO_DATA     : inout  std_logic_vector(15 downto 0);
 	 COUNTER_RESET		 : in  std_logic; --reset the counter when high
 	 MULTI_MODE			 : in  std_logic --1 when in multi snap mode
+    COUNTER_OUT : in std_logic; -- 1 when counter data requested
 );
 end AudioMonitor;
 
@@ -51,18 +52,23 @@ architecture a of AudioMonitor is
 
 begin
     -- Latch data on rising edge of Snap_out to keep it stable during IN
-    process (SNAP_OUT) begin
+    process (SNAP_OUT, COUNTER_OUT) begin
         if rising_edge(SNAP_OUT) then
-            output_data <= x"0000"; --this will be changed
+            output_data <= x"0000"; --ensures output data is initialized to 0
             output_data(0) <= snap; -- makes the 0th bit the snap signal
+	elsif rising_edge(COUNTER_OUT) then
+	    output_data <= x"0000";
+	    output_data <= counter;
 	end if;
     end process;
 	 
 --this section handles IO_DATA to ensure there is no conflicting in/out
-io_en <= SNAP_OUT OR COUNTER_RESET OR MULTI_MODE;
+io_en <= SNAP_OUT OR COUNTER_RESET OR MULTI_MODE OR COUNTER_OUT;
 process (io_en) begin
 	if (rising_edge(io_en)) then	
 		if (SNAP_OUT = '1') then --send snap data to scomp (0 or 1)
+			IO_DATA <= output_data;
+		elsif (COUNTER_OUT = '1') then
 			IO_DATA <= output_data;
 		elsif (COUNTER_RESET = '1') then --take in if the counter should be reset (1 is reset)
 			input_data <= IO_DATA;
@@ -75,8 +81,6 @@ process (io_en) begin
 		IO_DATA <= "ZZZZZZZZZZZZZZZZ"; --if a cs is not on a rising edge, it is falling and io_data should be high impedance
 	end if;
 end process;
-
-	 
 	 
    --process statement to do audio processing
     process (RESETN, AUD_NEW) --activated whevener resetn or AUD_NEW change
@@ -142,9 +146,11 @@ end process;
 		if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
 			snap <= '0';
 		end if;
-        end if;
-        
-			
+		if (reset_counter = '1') then --resets counter
+			counter <= x"0000";
+			reset_counter <= '0';
+		end if;
+        end if;		
     end process;
     
     --updating all variables concurrently
