@@ -30,6 +30,7 @@ architecture a of AudioMonitor is
     --intermediate variables
     signal snap        : std_logic; --is high when snap has been detected, is the 0th bit of output data/io data when out
     signal threshold   : std_logic_vector (15 downto 0); --audio threshold variable
+	 signal threshold2  : std_logic_vector (15 downto 0); --audio threshold variable for fall state
     
     signal min_time    : std_logic_vector (23 downto 0); --is the max amount of time a snap can take to go low,is a constant, num clock cycles
     signal time_high   : std_logic_vector (23 downto 0); --time that snap stays high, is a constant, the number of SCOMP clock cyles
@@ -59,19 +60,19 @@ begin
     begin
         if (RESETN = '0') then --resets audio data to 0 when low
             parsed_data <= x"0000";
-		state <= reset;
+				state <= reset;
         elsif (rising_edge(AUD_NEW)) then
-		parsed_data <= AUD_DATA; --updates audio data
+				parsed_data <= AUD_DATA; --updates audio data
 		--updates counter variables
-            	timer1 <= timer1 + x"000001";
-            	timer_snap <= timer_snap + x"000001";
+            	timer1 <= timer1 + "1";
+            	timer_snap <= timer_snap + "1";
 				
 		case state is --case statement for the states
             		when reset=> --reset state, initializes variables
-               			timer_snap <= x"000000";
+               			timer_snap <= x"00F000";
                			timer1 <= x"000000";
-				snap <= '0';
-				state <= check;
+								snap <= '0';
+								state <= check;
             		when check=> --checks to see if the audio has gone above the threshold
                 		if(parsed_data >= threshold) then
                     			state <= fall;
@@ -80,29 +81,32 @@ begin
                     			state <= check;
                 		end if;
             		when fall=> --waits and then checks to see if the audio has gone back below the threshold
-                    		if(parsed_data >= threshold) then
-                        		state <= fall;
+                    		if((parsed_data < threshold) AND (parsed_data(15) = '0')) then
+                        	if(timer1 > min_time) then
+										snap <= '0';
+										state <= check;
+									else
+										snap <= '1';
+										timer_snap <= x"000000";
+										state <= check;
+									end if;
+										
                     		else --if the audio has gone down then a 1 is output
-					if(timer1 < min_time) then
-                        			snap <= '1';
-                        			timer_snap <= x"000000";
-                        			state <= check; -- reroute to reset state? lights stayed on all the time when this was added
-					else
-						state <= check;
-					end if;
-                    		end if;
+									state <= fall;
+								end if;
 
 			end case;
-		if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
-			snap <= '0';
+				if (timer_snap >= time_high) then --this will set the snap variable equal to 0 if the time has elapsed
+					snap <= '0';
+				end if;
 		end if;
-        end if;
         
 			
     end process;
     
     --updating all variables concurrently
-    threshold <= x"2710";
+    threshold <= x"1964"; --6500 decimal
+	 threshold2 <= x"D8F0";
     min_time <= x"002E80"; --equivalent to a 0.25s time before audio signal is checked to be below threshold
     time_high <= x"005D01"; --equivalent to a 0.5s time for snap output to be high
     
