@@ -50,8 +50,7 @@ architecture a of AudioMonitor is
     signal state    : state_type; -- state signal
 
 begin
-	-- snap_out, counter_reset, multi_mode
-    -- Latch data on rising edge of CS to keep it stable during IN
+    -- Latch data on rising edge of Snap_out to keep it stable during IN
     process (SNAP_OUT) begin
         if rising_edge(SNAP_OUT) then
             output_data <= x"0000"; --this will be changed
@@ -59,21 +58,21 @@ begin
 	end if;
     end process;
 	 
-
+--this section handles IO_DATA to ensure there is no conflicting in/out
 io_en <= SNAP_OUT OR COUNTER_RESET OR MULTI_MODE;
 process (io_en) begin
 	if (rising_edge(io_en)) then	
-		if (SNAP_OUT = '1') then
+		if (SNAP_OUT = '1') then --send snap data to scomp (0 or 1)
 			IO_DATA <= output_data;
-		elsif (COUNTER_RESET = '1') then
+		elsif (COUNTER_RESET = '1') then --take in if the counter should be reset (1 is reset)
 			input_data <= IO_DATA;
 			reset_counter <= input_data(0);
-		elsif (MULTI_MODE = '1') then
+		elsif (MULTI_MODE = '1') then --take in if mode should be switched (1 is multi, 0 is normal)
 			input_data <= IO_DATA;
 			mode <= input_data(0);
 		end if;
 	else 
-		IO_DATA <= "ZZZZZZZZZZZZZZZZ";
+		IO_DATA <= "ZZZZZZZZZZZZZZZZ"; --if a cs is not on a rising edge, it is falling and io_data should be high impedance
 	end if;
 end process;
 
@@ -107,30 +106,31 @@ end process;
                 		end if;
 							
             		when fall=> --waits and then checks to see if the audio has gone back below the threshold
+				--can switch between multi snap mode and single snap
 				if (mode = '1') then --multi snap mode
 					if(min_time < timer1) then
                     				if(parsed_data >= threshold) then
                         				state <= check;
                     				else --if the audio has gone down then a 1 is output
                         				snap <= '1';
-                        				timer_snap <= x"000000";
-							counter <= counter + x"0001";
+                        				timer_snap <= x"000000"; --reset snap timer
+							counter <= counter + x"0001"; --increment counter variable
                         				state <= check;
                     				end if;
                 			else
                     				state <= fall;
                 			end if;
-				else
-					if(parsed_data >= threshold) then
+				else --if not in multi snap mode, do single snap
+					if(parsed_data >= threshold) then --loop while parsed data below threshold
                         			state <= fall;
-                    			else --if the audio has gone down then a 1 is output
-						if(timer1 < min_time) then
-                        				snap <= '1';
-                        				timer_snap <= x"000000";
-							counter <= counter + x"0001";
-                        				state <= check; -- reroute to reset state? lights stayed on all the time when this was added
+                    			else --if the audio has gone down then check to see if the time it took was small enough
+						if(timer1 < min_time) then --if time small enough
+                        				snap <= '1'; 
+                        				timer_snap <= x"000000"; --reset snap timer
+							counter <= counter + x"0001"; --increment counter
+                        				state <= check; --back to check state
 						else
-							state <= check;
+							state <= check; --back to check state
 						end if;
                     			end if;
 				end if;
