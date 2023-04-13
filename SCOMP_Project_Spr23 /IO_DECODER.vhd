@@ -20,7 +20,8 @@ ENTITY IO_DECODER IS
     SNAP_OUT	  : OUT STD_LOGIC;
     COUNTER_RESET : OUT STD_LOGIC;
     MULTI_MODE 	  : OUT STD_LOGIC;
-    COUNTER_OUT   : OUT STD_LOGIC
+    COUNTER_OUT   : OUT STD_LOGIC;
+    THRESHOLD_IN  : OUT STD_LOGIC
   );
 
 END ENTITY;
@@ -40,6 +41,7 @@ begin
   HEX1_EN      <= '1' WHEN (ADDR_INT = 16#005#) and (IO_CYCLE = '1') ELSE '0';
   SNAP_OUT    <= '1' WHEN (ADDR_INT = 16#050#) and (IO_CYCLE = '1') ELSE '0';
   COUNTER_OUT    <= '1' WHEN (ADDR_INT = 16#051#) and (IO_CYCLE = '1') ELSE '0';
+  THRESHOLD_IN    <= '1' WHEN (ADDR_INT = 16#05D#) and (IO_CYCLE = '1') ELSE '0';
   COUNTER_RESET    <= '1' WHEN (ADDR_INT = 16#05E#) and (IO_CYCLE = '1') ELSE '0';    
   MULTI_MODE    <= '1' WHEN (ADDR_INT = 16#05F#) and (IO_CYCLE = '1') ELSE '0';
   			   
