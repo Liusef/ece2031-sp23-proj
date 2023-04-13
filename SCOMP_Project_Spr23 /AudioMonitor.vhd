@@ -21,8 +21,9 @@ port(
     AUD_NEW     : in  std_logic; --high when audio data is being written from audio monitor
     IO_DATA     : inout  std_logic_vector(15 downto 0);
     COUNTER_RESET		 : in  std_logic; --reset the counter when high
-    MULTI_MODE			 : in  std_logic --1 when in multi snap mode
+    MULTI_MODE			 : in  std_logic; --1 when in multi snap mode
     COUNTER_OUT : in std_logic; -- 1 when counter data requested
+    THRESHOLD_IN : in std_logic -- 1 when threshold data coming in
 );
 end AudioMonitor;
 
@@ -34,7 +35,11 @@ architecture a of AudioMonitor is
     signal input_data : std_logic_vector(15 downto 0); --input data, 16 bits
     --intermediate variables
     signal snap        : std_logic; --is high when snap has been detected, is the 0th bit of output data/io data when out
+
+    --threshold related variables
     signal threshold   : std_logic_vector (15 downto 0); --audio threshold variable
+    signal user_threshold : std_logic_vector (1 downto 0); -- 0 if low, 1 if medium, 2 if high
+
     signal mode	       : std_logic; --is multisnap(1) or single snap(0)
     signal counter_reset : std_logic; -- high when reset counter, low when not
 
@@ -51,24 +56,18 @@ architecture a of AudioMonitor is
     signal state    : state_type; -- state signal
 
 begin
-    -- Latch data on rising edge of Snap_out to keep it stable during IN
-    process (SNAP_OUT, COUNTER_OUT) begin
-        if rising_edge(SNAP_OUT) then
-            output_data <= x"0000"; --ensures output data is initialized to 0
-            output_data(0) <= snap; -- makes the 0th bit the snap signal
-	elsif rising_edge(COUNTER_OUT) then
-	    output_data <= x"0000";
-	    output_data <= counter;
-	end if;
-    end process;
-	 
+	
 --this section handles IO_DATA to ensure there is no conflicting in/out
-io_en <= SNAP_OUT OR COUNTER_RESET OR MULTI_MODE OR COUNTER_OUT;
+io_en <= SNAP_OUT OR COUNTER_RESET OR MULTI_MODE OR COUNTER_OUT OR THRESHOLD_IN;
 process (io_en) begin
 	if (rising_edge(io_en)) then	
 		if (SNAP_OUT = '1') then --send snap data to scomp (0 or 1)
+			output_data <= x"0000";
+			output_data(0) = snap;
 			IO_DATA <= output_data;
 		elsif (COUNTER_OUT = '1') then
+			output_data <= x"0000";
+			output_data <= counter;
 			IO_DATA <= output_data;
 		elsif (COUNTER_RESET = '1') then --take in if the counter should be reset (1 is reset)
 			input_data <= IO_DATA;
@@ -76,12 +75,20 @@ process (io_en) begin
 		elsif (MULTI_MODE = '1') then --take in if mode should be switched (1 is multi, 0 is normal)
 			input_data <= IO_DATA;
 			mode <= input_data(0);
+		elsif (THRESHOLD_IN = '1') then --take in if threshold should be modified
+			input_data <= IO_DATA;
+			user_threshold <= IO_DATA(1 downto 0);
 		end if;
 	else 
 		IO_DATA <= "ZZZZZZZZZZZZZZZZ"; --if a cs is not on a rising edge, it is falling and io_data should be high impedance
 	end if;
 end process;
-	 
+
+with user_threshold select threshold <= 
+	x"07D0" when "00", --low threshold, 2000
+	x"1F40" when "01", --medium threshold, 8000
+	x"32C8" when "10", --high threshold, 13000
+	x"32C8" when "11"; --high threshold too
    --process statement to do audio processing
     process (RESETN, AUD_NEW) --activated whevener resetn or AUD_NEW change
     begin
@@ -154,7 +161,6 @@ end process;
     end process;
     
     --updating all variables concurrently
-    threshold <= x"1F40";
     min_time <= x"002E80"; --equivalent to a 0.25s time before audio signal is checked to be below threshold
     time_high <= x"005D01"; --equivalent to a 0.5s time for snap output to be high
     one <= x"000001"; -- constant 1
