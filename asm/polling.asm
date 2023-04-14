@@ -6,7 +6,6 @@
 
 Start:
     IN      Peripheral      ;takes in data from peripheral
-    OUT Hex0 ;displays peripheral data on hex display
     JZERO   Richard         ;if peripheral has not returned a positive value of 1 (snap detected), jump
 
 ;--turns on the LED lights--
@@ -30,4 +29,4 @@ LEDs:      EQU 001
 Timer:     EQU 002
 Hex0:      EQU 004
 Hex1:      EQU 005
-Peripheral: EQU &H050
+Peripheral:EQU &H50
