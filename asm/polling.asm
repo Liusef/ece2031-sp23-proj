@@ -6,6 +6,7 @@
 
 Start:
     IN      Peripheral      ;takes in data from peripheral
+    OUT Hex0 ;displays peripheral data on hex display
     JZERO   Richard         ;if peripheral has not returned a positive value of 1 (snap detected), jump
 
 ;--turns on the LED lights--
