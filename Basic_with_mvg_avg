@@ -42,8 +42,9 @@ architecture a of AudioMonitor is
 	 signal sum				: std_logic_vector(23 downto 0) := (x"000000");
 	 signal moving_avg  : std_logic_vector (23 downto 0) := (x"000000"); --is 24 bits because it will store the sum of moving average
 	 
-    type state_type is (reset, check, fall); --state machine states
+    type state_type is (reset, filter, check, fall); --state machine states
     signal state    : state_type; -- state signal
+	 signal old_state : state_type; -- previous state
 
 begin
 
@@ -68,48 +69,64 @@ begin
 				state <= reset;
         elsif (rising_edge(AUD_NEW)) then
 				parsed_data <= AUD_DATA; --updates audio data
-				moving_avg <= x"000000";
-				for i in 255 downto 1 loop
-					moving_avg_array(i) <= moving_avg_array(i-1);
-				end loop;
-					moving_avg_array(0)(15 downto 0) <= parsed_data;
-				for j in 255 downto 0 loop
-					moving_avg <= moving_avg + moving_avg_array(j);
-				end loop;
-				moving_avg <= conv_std_logic_vector(conv_integer(signed(moving_avg)) / 256, moving_avg'length); --final average
-		
-				--updates counter variables
-            timer1 <= timer1 + "1";
-            timer_snap <= timer_snap + "1";
+		--updates counter variables
+            	timer1 <= timer1 + "1";
+            	timer_snap <= timer_snap + "1";
 				
-				case state is --case statement for the states
+		case state is --case statement for the states
             		when reset=> --reset state, initializes variables
                			timer_snap <= x"00F000";
                			timer1 <= x"000000";
 								snap <= '0';
-								for i in 255 downto 0 loop
-									moving_avg_array(i) <= x"000000";
-								end loop;
-								state <= check;
+								moving_avg <= x"000000";
+								state <= filter;
+								old_state <= check;
+						when filter =>
+							--loops 
+							for i in 255 downto 1 loop
+								moving_avg_array(i) <= moving_avg_array(i-1);
+							end loop;
+							moving_avg_array(0)(15 downto 0) <= parsed_data;
+							for j in 255 downto 0 loop
+								moving_avg <= moving_avg + moving_avg_array(j);
+							end loop;
+							moving_avg <= conv_std_logic_vector(conv_integer(signed(moving_avg)) / 256, moving_avg'length); --final average
+							case old_state is
+								when check =>
+									state <= check;
+								when fall =>
+									state <= fall;
+								when filter =>
+									state <= reset;
+								when reset =>
+									state <= reset;
+							end case;
+							
             		when check=> --checks to see if the audio has gone above the threshold
                 		if(moving_avg(15 downto 0) >= threshold) then
                     			state <= fall;
+									old_state <= fall;
                 		else
                     			timer1 <= x"000000";
                     			state <= check;
+									old_state <= check;
                 		end if;
             		when fall=> --waits and then checks to see if the audio has gone back below the threshold
                     		if((moving_avg(15 downto 0) < threshold)) then
                         	if(timer1 > min_time) then
+										snap <= '0';
+										old_state <= check;
 										state <= check;
 									else
 										snap <= '1';
 										timer_snap <= x"000000";
+										old_state <= check;
 										state <= check;
 									end if;
 										
                     		else --if the audio has not gone down then update average
-									state <= fall;
+									state <= filter;
+									old_state <= fall;
 								end if;
 
 			end case;
