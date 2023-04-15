@@ -29,13 +29,12 @@ architecture a of AudioMonitor is
     -- We should probably tune this more later
     constant threshold  : std_logic_vector (15 downto 0) := x"0800";
     constant N : integer := 16; -- number of samples in the filter
-    constant S : integer := 4; 
+    constant S : integer := 4; -- is log base 2 of N - we will shift the signal by 4 bits to divide
 
     --signals related to moving average
     type mvarr is array (0 to N-1) of std_logic_vector(15 downto 0); --declare moving array type - N std logic that are 16 bit
     signal samples      : mvarr;  --array of the past N samples
     signal sum          : std_logic_vector (31 downto 0); --sum variable for all the samples
-    signal mvavg_inter	: std_logic_vector (31 downto 0); --interim variable
     signal mvavg        : std_logic_vector (15 downto 0); --moving average
 
     --output/input variables
@@ -88,9 +87,8 @@ begin
             end if;
 	    --update the moving average
             sum <= sum + parsed_data - samples(N-1); -- from the running sum, add the new data and subtract the last sample
-            samples <= parsed_data & samples(0 to N-2); --concatenate the parsed data to the end of samples, exclude the oldest sample
-            mvavg_inter <= sum; -- sum goes to interim
-            mvavg <= sum (15 + S downto S); -- what does this do
+            samples <= parsed_data & samples(0 to N-2); --concatenate the parsed data to the end of samples, exclude the oldest sample 
+            mvavg <= sum (15 + S downto S); --shifts sum by s bits to the right - same as dividing by N
                
             -- Update the counter when we're checking for duration
             if (checking = '1') then
