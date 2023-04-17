@@ -27,18 +27,19 @@ Basic:
         IN      SWITCHES
         STORE   sw_in
 
+;;      commented multi mode bc not implemented yet
 ;;        ;; Check single or multi mode, then load value to send
 ;;        LOAD    sw_in
 ;;        AND     MULTI_MASK
 
-        JZERO   basicElse1
-            LOAD    MULTI_MODE
-            JUMP    basicEndIf1
-        basicElse1:
-            LOAD    SINGL_MODE
-        basicEndIf1:
+;;        JZERO   basicElse1
+;;            LOAD    MULTI_MODE
+;;            JUMP    basicEndIf1
+ ;;       basicElse1:
+;;            LOAD    SINGL_MODE
+;;       basicEndIf1:
 
-        OUT     P_MULTI
+;;        OUT     P_MULTI
 
         ;; Check if we need to reset the counter, then load and reset
         LOAD    sw_in
