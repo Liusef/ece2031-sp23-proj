@@ -60,6 +60,7 @@ architecture a of AudioMonitor is
     signal snapCount   : std_logic_vector(15 downto 0);
     signal decayTime   : std_logic_vector(31 downto 0);
     signal soundTime   : std_logic_vector(31 downto 0);
+    signal snap        : std_logic;
 
     -- States
     type state_type is (reset, idle, rise, decay, final);
@@ -70,7 +71,10 @@ begin
     -- Latch data on rising edge of CS to keep it stable during IN
     process (CS) begin
         if rising_edge(CS) then
-            output_data <= snapCount;
+	    output_data <= x"0000";
+	    output_data(0) <= snap;
+            output_data(15 downto 1) <= snapCount(14 downto 0);
+	    snapCount <= x"0000";
         end if;
     end process;
 
@@ -79,6 +83,10 @@ begin
     with out_en select IO_DATA <=
         snapCount        when '1',
         "ZZZZZZZZZZZZZZZZ" when others;
+ 
+    with snapCount select snap <= 
+	    '0' when x"0000",
+	    '1' when others;
 
     process (RESETN, SYS_CLK)
     begin
