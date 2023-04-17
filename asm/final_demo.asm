@@ -41,14 +41,11 @@ Basic:
 
 ;;        OUT     P_MULTI
 
-        ;; Check if we need to reset the counter, then load and reset
-        LOAD    sw_in
-        AND     RESET_MASK
-
-        JZERO   basicEndIf2
-            LOAD    RESET_VAL
-            OUT     P_RESET
-        basicEndIf2:
+        ;;check if user wants the input to be read or not
+        LOAD sw_in
+        AND POLL_MASK
+        
+        JZERO        ;;
 
         ;; Read peripheral output, load full or zero depending on reply
         IN      P_OUTPUT
@@ -62,8 +59,7 @@ Basic:
         OUT     LEDS    ;; Send value to LEDs
 
         ;; Read counter and send to hex display
-        IN      P_COUNTER
-        OUT     HEX0
+       
 
         ;; rerun event loop
         JUMP basicEventLoop
@@ -94,9 +90,12 @@ FULL:       DW &H03FF   ;; Least sig 10 bits are 1
 RESET_MASK: DW &H0200   ;; 10th bit set, equivalent to 9th switch
 RESET_VAL:  DW 1
 
-MULTI_MASK: DW &H0100   ;;  9th bit set, equivalent to 8th switch
+POLL_MASK: DW &H0100 ;; 9th bit set, equivalent to 8th switch
+
+MULTI_MASK: DW &H0080   ;;  8th bit set, equivalent to 7th switch
 SINGL_MODE: DW 0
 MULTI_MODE: DW 1
+
 
 SW_0_1:     DW 3        ;; 0b11, switch 0 and 1, for getting threshold
 
