@@ -1,0 +1,20 @@
+WIDTH=16;
+DEPTH=2048;
+
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+
+CONTENT BEGIN
+0000: 9050; --     IN      Peripheral      ;takes in data from peripheral
+0001: 9804; --     OUT     Hex0 ;displays peripheral data on hex display
+0002: 4006; --     JZERO   Richard         ;if peripheral has not returned a positive value of 1 (snap detected), jump
+0003: 080A; --     LOAD    Full            ;loads full value into AC
+0004: 9801; --     OUT     LEDs            ;outputs the LED lights (should be on)
+0005: 2800; --     JUMP    Start           ;jumps back to beginning
+0006: 0809; --     LOAD    Zero            ;loads zero into AC
+0007: 9801; --     OUT     LEDs            ;outputs the LED lights (should be off)
+0008: 2800; --     JUMP    Start           ;jumps back to beginning
+0009: 0000; -- Zero:   DW 0
+000A: FFFF; -- Full:   DW &HFFFF
+[000B..07FF] : 0000; -- [empty memory]
+END;

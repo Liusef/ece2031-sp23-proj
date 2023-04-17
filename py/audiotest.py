@@ -91,9 +91,9 @@ def oscillationFilter(fname: str):
     stream = read_wave(f"{fname}.wav")
 
     #Constants
-    threshold = 3000
-    aboveTime = 12000
-    delayTime = 2000
+    threshold = 0x4ff
+    aboveTime = 0x3a00
+    delayTime = 0x100
 
     #States 
     state = "idle"
@@ -109,7 +109,6 @@ def oscillationFilter(fname: str):
     countArr = []
 
     for b in stream:
-        b = abs(b)
         
         countArr.append(count * 10000)
         currentState.append(states.index(state) * 15000)
@@ -156,7 +155,7 @@ def main() -> None:
     print(f"Snap:    {oscillationFilter('snap')}")
     print(f"Ahhh:    {oscillationFilter('ah')}")
     print(f"Richard: {oscillationFilter('richard')}")
-    print(f"Comp:    {oscillationFilter('comprehensive')}")
+    # print(f"Comp:    {oscillationFilter('comprehensive')}")
 
 
 if __name__=="__main__":

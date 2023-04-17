@@ -120,7 +120,7 @@ PseudoRng:
     ADD     rand_store
     ADDI    1
     STORE   rand_val
-    RET
+    RETURN
 ;; }
  
 
@@ -136,7 +136,7 @@ WaitSec:
         JUMP    WaitSecLoopStart
     waitSecLoopEnd:
     LOAD    swap 
-    RET
+    RETURN
 ;; }
 
 
