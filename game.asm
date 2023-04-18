@@ -1,4 +1,4 @@
-; AudioTest.asm
+; game.asm
 ; Displays the value from the audio peripheral
 
 ORG 0
@@ -6,7 +6,7 @@ ORG 0
 	LOAD Counter
 Reset:
 	ADDI -1
-    OUT Audio
+    OUT Counter_Reset
     JPOS Reset
     LOADI 0
     
@@ -24,7 +24,7 @@ Advanced:
     OUT LEDs
     
     ;Resets the clap counter
-    OUT     Audio
+    OUT     Counter_Reset
 
     advancedLoop1Start:
         CALL    Wait
@@ -117,7 +117,8 @@ LEDs:      EQU 001
 Timer:     EQU 002
 Hex0:      EQU 004
 Hex1:      EQU 005
-Audio:     EQU &H50
+Audio:     EQU &H51 ;counter
+Counter_Reset EQU &H52
 
 ; Constants
 L_S_NIBBLE: DW &H0F
